@@ -161,3 +161,31 @@ class QQBotAPI:
         if result.get("status") == "ok":
             return result.get("data", {})
         return {}
+    
+    @staticmethod
+    def set_friend_add_request(flag: str, approve: bool = True, remark: str = "") -> bool:
+        """
+        处理加好友请求
+        
+        Args:
+            flag: 加好友请求的 flag（在事件中获取）
+            approve: 是否同意，True 为同意，False 为拒绝
+            remark: 添加后的好友备注（仅在同意时有效）
+            
+        Returns:
+            是否处理成功
+        """
+        data = {
+            "flag": flag,
+            "approve": approve
+        }
+        if remark:
+            data["remark"] = remark
+        
+        result = QQBotAPI._call_api("set_friend_add_request", data)
+        
+        success = result.get("status") == "ok"
+        if success:
+            action = "同意" if approve else "拒绝"
+            print(f"[好友请求] 已{action}好友请求 (flag: {flag[:20]}...)")
+        return success

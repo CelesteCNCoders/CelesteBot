@@ -321,6 +321,8 @@ class OneBotWebSocket:
             self._handle_message_event(data)
         elif post_type == "notice":
             self._handle_notice_event(data)
+        elif post_type == "request":
+            self._handle_request_event(data)
         elif post_type == "meta_event":
             self._handle_meta_event(data)
     
@@ -374,6 +376,21 @@ class OneBotWebSocket:
         elif meta_event_type == "heartbeat":
             # 心跳事件，可以忽略
             pass
+    
+    def _handle_request_event(self, data: dict):
+        """处理请求事件（好友请求、群邀请等）"""
+        request_type = data.get("request_type")
+        
+        if request_type == "friend":
+            # 好友添加请求
+            user_id = str(data.get("user_id", ""))
+            flag = data.get("flag", "")
+            comment = data.get("comment", "")  # 验证信息
+            
+            print(f"[好友请求] 收到来自 {user_id} 的好友请求，验证信息: {comment}")
+            
+            # 自动通过好友请求
+            self.bot.on_friend_request(user_id, flag, comment)
     
     def _extract_text(self, message) -> str:
         """从消息段中提取纯文本"""
@@ -485,6 +502,22 @@ class QQBot:
         """机器人离开群时调用"""
         self.data.remove_group(group_id)
         print(f"[Bot] 已离开群: {group_id}")
+    
+    def on_friend_request(self, user_id: str, flag: str, comment: str):
+        """
+        处理好友添加请求
+        
+        Args:
+            user_id: 请求者 QQ 号
+            flag: 请求标识（用于同意/拒绝）
+            comment: 验证信息
+        """
+        # 自动同意好友请求
+        success = self.qq_api.set_friend_add_request(flag, approve=True)
+        if success:
+            print(f"[Bot] 已自动通过 {user_id} 的好友请求")
+        else:
+            print(f"[Bot] 自动通过 {user_id} 的好友请求失败")
 
 
 # ============== 主程序 ==============
